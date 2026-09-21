@@ -12,6 +12,8 @@ from sqlmodel import Session, func, select
 
 from app.db import get_session
 from app.models import (
+    Claim,
+    ClaimStatus,
     Customer,
     CustomerCreate,
     Policy,
@@ -49,6 +51,7 @@ def money(value: float | None) -> str:
 templates.env.filters["money"] = money
 templates.env.globals["today"] = date.today
 templates.env.globals["PolicyStatus"] = PolicyStatus
+templates.env.globals["ClaimStatus"] = ClaimStatus
 
 
 def render(request: Request, name: str, **ctx):
@@ -267,6 +270,17 @@ def policy_status(policy_id: int, status: PolicyStatus = Form(...), session: Ses
     session.add(policy)
     session.commit()
     return RedirectResponse(f"/policies/{policy_id}?flash=Status+updated", status_code=303)
+
+
+# --------------------------------------------------------------------------- #
+# Claims
+# --------------------------------------------------------------------------- #
+@router.get("/claims", response_class=HTMLResponse)
+def claims_list(request: Request, status: str | None = None, session: Session = Depends(get_session)):
+    stmt = select(Claim).order_by(Claim.created_at.desc())
+    if status:
+        stmt = stmt.where(Claim.status == status)
+    return render(request, "claims.html", claims=session.exec(stmt).all(), status=status)
 
 
 # --------------------------------------------------------------------------- #

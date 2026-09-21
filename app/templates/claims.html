@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pill %}
+{% block title %}Claims{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="container">
+    <div>
+      <span class="eyebrow">Claims</span>
+      <h1>Claim <span class="hl">status</span></h1>
+      <p>{{ claims | length }} shown{% if status %} · filtered by {{ status }}{% endif %}.</p>
+    </div>
+    <a class="btn btn--ghost" href="/policies">Browse policies</a>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <div class="tabs">
+      <a href="/claims" class="{{ 'on' if not status }}">All</a>
+      {% for s in ClaimStatus %}<a href="/claims?status={{ s.value }}" class="{{ 'on' if status == s.value }}">{{ s.value }}</a>{% endfor %}
+    </div>
+    <div class="card" style="padding:0">
+      {% if claims %}
+      <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Policy</th><th>Customer</th><th>Incident</th><th>Description</th><th class="num">Amount</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for c in claims %}
+          <tr>
+            <td class="mono">{{ c.id }}</td>
+            <td><a class="mono" href="/policies/{{ c.policy_id }}">{{ c.policy.policy_number }}</a></td>
+            <td><a href="/customers/{{ c.policy.customer_id }}">{{ c.policy.customer.name }}</a></td>
+            <td class="small">{{ c.incident_date.strftime('%d %b %Y') }}</td>
+            <td class="small">{{ c.description }}{% if c.reason %}<br><span class="muted">Reason: {{ c.reason }}</span>{% endif %}</td>
+            <td class="num">{{ c.amount | money }}</td>
+            <td>{{ pill(c.status) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      {% else %}
+      <div class="empty">No claims{% if status %} with status {{ status }}{% endif %}.</div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
